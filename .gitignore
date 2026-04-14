@@ -1,0 +1,30 @@
+# ── Dataset images (too large for GitHub) ──
+*.tif
+*.tiff
+final_Dataset/Fused_Outputs/
+Images Dataset/
+New_Dataset/
+tmp_stack_in/
+tmp_stack_out/
+
+# ── Python ──
+__pycache__/
+*.pyc
+*.pyo
+.env
+venv/
+.venv/
+
+# ── IDE ──
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── OS ──
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# ── Jupyter ──
+.ipynb_checkpoints/
