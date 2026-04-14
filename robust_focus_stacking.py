@@ -269,10 +269,18 @@ def compute_focus_maps(images: list[np.ndarray]) -> np.ndarray:
         ml = modified_laplacian(gray)
         tg = tenengrad(gray)
 
-        # Combine: weighted sum (both normalised to [0,1] first)
+        # Local variance: Var = E[X²] − E[X]²
+        # Tiny contribution (5%) acts as tiebreaker in smooth/low-texture regions
+        # where Laplacian and Tenengrad both return near-zero
+        mean = cv2.GaussianBlur(gray, (9, 9), 0)
+        lv = cv2.GaussianBlur(gray * gray, (9, 9), 0) - mean * mean
+        lv = np.maximum(lv, 0.0)
+
+        # Combine: weighted sum (all normalised to [0,1] first)
         ml_n = cv2.normalize(ml, None, 0, 1, cv2.NORM_MINMAX)
         tg_n = cv2.normalize(tg, None, 0, 1, cv2.NORM_MINMAX)
-        combined = 0.5 * ml_n + 0.5 * tg_n
+        lv_n = cv2.normalize(lv, None, 0, 1, cv2.NORM_MINMAX)
+        combined = 0.48 * ml_n + 0.48 * tg_n + 0.04 * lv_n
 
         # Spatial smoothing to suppress noise in flat regions
         combined = cv2.GaussianBlur(
@@ -280,6 +288,9 @@ def compute_focus_maps(images: list[np.ndarray]) -> np.ndarray:
             (FOCUS_GAUSS_KSIZE, FOCUS_GAUSS_KSIZE),
             sigmaX=FOCUS_GAUSS_SIGMA,
         )
+        # Gamma enhancement: increases contrast between sharp and blurred scores
+        # in low-texture regions where raw differences are very small
+        combined = np.power(combined, 1.4)
         focus_volume[i] = combined
 
     return focus_volume
